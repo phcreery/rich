@@ -28,6 +28,7 @@ from .console import (
     JustifyMethod,
     RenderableType,
     RenderGroup,
+    OverflowMethod,
 )
 from .jupyter import JupyterMixin
 from .highlighter import Highlighter
@@ -277,6 +278,40 @@ class TextColumn(ProgressColumn):
             self.highlighter.highlight(text)
         return text
 
+class SizedTextColumn(ProgressColumn):
+    """A column containing text."""
+
+    def __init__(
+        self,
+        text_format: str,
+        style: StyleType = "none",
+        justify: JustifyMethod = "left",
+        markup: bool = True,
+        highlighter: Highlighter = None,
+        overflow: Optional[OverflowMethod] = None,
+        width: int = 0
+    ) -> None:
+        self.text_format = text_format
+        self.justify = justify
+        self.style = style
+        self.markup = markup
+        self.highlighter = highlighter
+        self.overflow = overflow,
+        self.width = width
+        super().__init__()
+
+    def render(self, task: "Task") -> Text:
+        _text = self.text_format.format(task=task)
+        if self.markup:
+            text = Text.from_markup(
+                _text, style=self.style, justify=self.justify)
+        else:
+            text = Text(_text, style=self.style, justify=self.justify)
+        if self.highlighter:
+            self.highlighter.highlight(text)
+        if self.width:
+            text.truncate(max_width=self.width, overflow=self.overflow, pad=True)
+        return text
 
 class BarColumn(ProgressColumn):
     """Renders a visual progress bar.
